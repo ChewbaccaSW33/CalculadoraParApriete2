@@ -1,0 +1,210 @@
+
+<!-- saved from url=(0259)https://142777373-atari-embeds.googleusercontent.com/embeds/16cb204cf3a9d4d223a0a3fd8b0eec5d/inner-frame-minified.html?jsh=m%3B%2F_%2Fscs%2Fabc-static%2F_%2Fjs%2Fk%3Dgapi.lb.es.jwu6XELxChE.O%2Fd%3D1%2Frs%3DAHpOoo_5k0AlmbHjfmR3TjrRXQ2zdlnHuQ%2Fm%3D__features__ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><!--<base target="_blank">--><base href="." target="_blank">
+
+
+  <title>Calculadora de Par de Apriete</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2em;
+      max-width: 600px;
+      margin: auto;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    h2 {
+      text-align: center;
+      color: rgb(166, 25, 46);
+    }
+    label {
+      display: block;
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+    }
+    input[type="number"], select, button {
+      margin-bottom: 1em;
+      padding: 0.8em;
+      width: calc(100% - 1.6em); /* Restar el padding para que el ancho sea 100% */
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box; /* Incluir padding y borde en el ancho total */
+    }
+    button {
+      background-color: rgb(166, 25, 46);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: rgb(130, 20, 35);
+    }
+    #resultado {
+      font-weight: bold;
+      margin-top: 2em;
+      background: #e9ecef;
+      padding: 1.5em;
+      border-radius: 8px;
+      white-space: pre-line;
+      line-height: 1.6;
+      border: 1px solid #dee2e6;
+    }
+  </style>
+</head>
+<body>
+  <h2>Calculadora de Par de Apriete</h2>
+
+  <label for="k2">Valor K2 (entre 0.10 y 0.23):</label>
+  <input type="number" id="k2" step="0.01" min="0.10" max="0.23" placeholder="Ejemplo: 0.15">
+
+  <label for="diametro">Selecciona el diámetro:</label>
+  <select id="diametro">
+    <option value="">-- Elige uno --</option>
+    <option value="12">M12</option>
+    <option value="14">M14</option>
+    <option value="16">M16</option>
+    <option value="18">M18</option>
+    <option value="20">M20</option>
+    <option value="22">M22</option>
+    <option value="24">M24</option>
+    <option value="27">M27</option>
+    <option value="30">M30</option>
+    <option value="36">M36</option>
+  </select>
+
+  <label for="calidad">Selecciona la calidad:</label>
+  <select id="calidad">
+    <option value="">-- Elige una --</option>
+    <option value="8.8">8.8</option>
+    <option value="10.9">10.9</option>
+  </select>
+
+  <label for="espesor">Espesor atornillado (mm) - Opcional:</label>
+  <input type="number" id="espesor" step="1" min="1" placeholder="Ejemplo: 50 (o dejar vacío)">
+
+  <button onclick="calcular()">Calcular</button>
+
+  <div id="resultado"></div>
+
+  <script>
+    // Fuerza de precarga mínima en kN
+    const fuerzaPrecarga = {
+      "8.8": {
+        12: 47, 14: 65, 16: 88, 18: 108, 20: 137,
+        22: 170, 24: 198, 27: 257, 30: 314, 36: 458
+      },
+      "10.9": {
+        12: 59, 14: 81, 16: 110, 18: 134, 20: 172,
+        22: 212, 24: 247, 27: 321, 30: 393, 36: 572
+      }
+    };
+
+    // Espesor de una arandela por diámetro (en mm)
+    const espesorArandela = {
+      12: 3,
+      14: 3,
+      16: 4,
+      18: 4,
+      20: 4,
+      22: 4,
+      24: 4,
+      27: 5,
+      30: 5,
+      36: 5
+    };
+
+    function calcular() {
+      const k2 = parseFloat(document.getElementById("k2").value);
+      const diametro = parseInt(document.getElementById("diametro").value);
+      const calidad = document.getElementById("calidad").value;
+      const espesorAtornilladoInput = document.getElementById("espesor").value; // Leer como string para chequear si está vacío
+      const resultadoDiv = document.getElementById("resultado");
+
+      // Bandera para determinar si se usa el método combinado
+      let usarMetodoCombinado = false;
+      let espesorValido = false;
+      let valorEspesor = 0; // Inicializamos a 0
+
+      // --- Validaciones iniciales (obligatorias) ---
+      if (isNaN(k2) || k2 < 0.10 || k2 > 0.23) {
+        resultadoDiv.innerText = "Error: Introduce un valor K2 válido entre 0.10 y 0.23.";
+        return;
+      }
+      if (isNaN(diametro)) {
+        resultadoDiv.innerText = "Error: Selecciona un diámetro válido.";
+        return;
+      }
+      if (!calidad || !fuerzaPrecarga[calidad] || !fuerzaPrecarga[calidad][diametro]) {
+        resultadoDiv.innerText = "Error: Selecciona una calidad válida.";
+        return;
+      }
+
+      // --- Validación del campo opcional 'Espesor atornillado' ---
+      // Si el campo no está vacío, intentamos parsearlo y validarlo
+      if (espesorAtornilladoInput.trim() !== '') {
+        valorEspesor = parseFloat(espesorAtornilladoInput);
+        if (isNaN(valorEspesor) || valorEspesor <= 0) {
+          resultadoDiv.innerText = "Error: Si rellenas 'Espesor atornillado', debe ser un número válido (mayor que 0).";
+          return;
+        }
+        if (espesorArandela[diametro] === undefined) {
+          resultadoDiv.innerText = "Error: No se encontró el espesor de arandela para el diámetro seleccionado, necesario para el Método Combinado.";
+          return;
+        }
+        // Si todo es válido, habilitamos el método combinado
+        usarMetodoCombinado = true;
+        espesorValido = true; // El valor del espesor es válido para los cálculos
+      }
+
+      // --- Cálculos de Par Torsor (siempre se muestran) ---
+      const fuerza = fuerzaPrecarga[calidad][diametro]; // en kN
+      const parBase = k2 * diametro * fuerza;
+
+      const primeraEtapaParTorsor = parBase * 0.75;
+      const segundaEtapaParTorsor = parBase * 1.10;
+
+      // --- Construcción del Resultado para el Método del Par Torsor ---
+      let resultadoTexto =
+        `Método del par torsor\n` +
+        `Par apriete primera etapa: ${primeraEtapaParTorsor.toFixed(2)} Nm\n` +
+        `Par apriete segunda etapa: ${segundaEtapaParTorsor.toFixed(2)} Nm`;
+
+      // --- Cálculos y adición del Método Combinado (solo si el espesor es válido) ---
+      if (usarMetodoCombinado && espesorValido) {
+        const parPrimeraEtapaCombinado = parBase * 0.75;
+
+        const espesorTotal = valorEspesor + (2 * espesorArandela[diametro]);
+
+        let giroParcialSegundaEtapa;
+        const limite1 = diametro * 2;
+        const limite2 = diametro * 6;
+
+        if (espesorTotal < limite1) {
+          giroParcialSegundaEtapa = "60"; // grados
+        } else if (espesorTotal >= limite1 && espesorTotal < limite2) {
+          giroParcialSegundaEtapa = "90"; // grados
+        } else if (espesorTotal >= limite2) {
+          giroParcialSegundaEtapa = "120"; // grados
+        } else {
+          giroParcialSegundaEtapa = "Error en el cálculo del giro";
+        }
+
+        // Añadir el Método Combinado al texto de resultado
+        resultadoTexto +=
+          `\n\n\n` + // Dos saltos de línea para los espacios extra
+          `Método combinado\n` +
+          `Par apriete primera etapa: ${parPrimeraEtapaCombinado.toFixed(2)} Nm\n` +
+          `Giro parcial segunda etapa: ${giroParcialSegundaEtapa} grados`;
+      }
+
+      // Mostrar el resultado final
+      resultadoDiv.innerText = resultadoTexto;
+    }
+  </script>
+
+
+</body></html>
